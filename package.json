@@ -2,7 +2,6 @@
     "name": "promptwire-webhook",
     "version": "1.0.0",
     "dependencies": {
-        "stripe": "^14.0.0",
-        "micro": "^9.4.1"
+        "stripe": "^14.0.0"
     }
 }
