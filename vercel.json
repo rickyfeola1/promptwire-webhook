@@ -13,20 +13,3 @@
         }
     ]
 }
-```
-
----
-
-**Step 2 — Deploy to Vercel**
-
-Connect the repo to a new Vercel project. Add these environment variables:
-```
-STRIPE_SECRET_KEY          sk_live_... (Stripe Dashboard → Developers → API Keys)
-STRIPE_WEBHOOK_SECRET      get this in Step 3
-FACEBOOK_PIXEL_ID          2055998351875626
-FACEBOOK_ACCESS_TOKEN      EAAMSYJsmyKQ...
-```
-
-Deploy it. Your webhook URL will be:
-```
-https://promptwire-webhook.vercel.app/api/stripe-webhook
