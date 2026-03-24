@@ -1,6 +1,5 @@
 import Stripe from 'stripe';
 import crypto from 'crypto';
-import { buffer } from 'micro';
 
 export const config = {
     api: { bodyParser: false }
@@ -8,11 +7,24 @@ export const config = {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+async function getRawBody(req) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        req.on('data', chunk => chunks.push(chunk));
+        req.on('end', () => resolve(Buffer.concat(chunks)));
+        req.on('error', reject);
+    });
+}
+
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).end();
+    console.log('Webhook received:', req.method);
+
+    if (req.method !== 'POST') {
+        return res.status(405).end();
+    }
 
     const sig = req.headers['stripe-signature'];
-    const rawBody = await buffer(req);
+    const rawBody = await getRawBody(req);
     let event;
 
     try {
@@ -21,6 +33,7 @@ export default async function handler(req, res) {
             sig,
             process.env.STRIPE_WEBHOOK_SECRET
         );
+        console.log('Event type:', event.type);
     } catch (err) {
         console.error('Webhook signature failed:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -31,6 +44,8 @@ export default async function handler(req, res) {
         const email = session.customer_details?.email;
         const amount = session.amount_total / 100;
         const currency = session.currency.toUpperCase();
+
+        console.log('Payment completed:', email, amount, currency);
 
         if (email) {
             const hashedEmail = crypto
@@ -63,9 +78,9 @@ export default async function handler(req, res) {
                     }
                 );
                 const fbData = await fbRes.json();
-                console.log('Facebook Purchase CAPI fired:', fbData);
+                console.log('Facebook CAPI response:', JSON.stringify(fbData));
             } catch (fbErr) {
-                console.error('Facebook CAPI error:', fbErr);
+                console.error('Facebook CAPI error:', fbErr.message);
             }
         }
     }
